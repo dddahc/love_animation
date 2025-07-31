@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浪漫爱心动画 | I LOVE U</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            background: linear-gradient(135deg, #f9c5d1 0%, #fcecf1 100%);
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .love-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+        
+        .love-text {
+            position: relative;
+            font-size: 15vw;
+            font-weight: 900;
+            color: #4da6ff;
+            text-shadow: 
+                0 0 5px #fff, 
+                0 0 10px #4da6ff, 
+                0 0 15px #4da6ff;
+            letter-spacing: 3px;
+            animation: glow 2s infinite alternate;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .sub-text {
+            color: #ff66a3;
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.8);
+            animation: float 4s infinite ease-in-out;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+        }
+        
+        .btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid #ff66a3;
+            color: #ff66a3;
+            padding: 12px 30px;
+            margin: 0 10px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            backdrop-filter: blur(5px);
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: translateY(-3px);
+        }
+        
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 
+                    0 0 5px #fff, 
+                    0 0 10px #4da6ff, 
+                    0 0 15px #4da6ff;
+                transform: scale(1);
+            }
+            50% {
+                text-shadow: 
+                    0 0 10px #fff, 
+                    0 0 20px #4da6ff, 
+                    0 0 30px #4da6ff,
+                    0 0 40px #1a8cff;
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .love-text {
+                font-size: 12vw;
+            }
+            .sub-text {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="heartCanvas"></canvas>
+    
+    <div class="love-container">
+        <div class="love-text">I LOVE U</div>
+        <div class="sub-text">Forever and Always</div>
+    </div>
+    
+    <div class="controls">
+        <button class="btn" id="moreBtn">更多爱心</button>
+        <button class="btn" id="pauseBtn">暂停/开始</button>
+    </div>
+    
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
+    
+    <script>
+        // Canvas初始化
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置canvas大小为窗口尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        // 初始化调整
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 爱心类
+        class Heart {
+            constructor() {
+                this.reset();
+                this.size = Math.random() * 20 + 10;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 2,
+                    y: Math.random() * 2 + 1
+                };
+                this.alpha = Math.random() * 0.5 + 0.5;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.05;
+            }
+            
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = -20;
+                this.size = Math.random() * 20 + 10;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 2,
+                    y: Math.random() * 2 + 1
+                };
+                this.alpha = Math.random() * 0.5 + 0.5;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.05;
+                this.wiggle = {
+                    speed: Math.random() * 0.02 + 0.01,
+                    offset: Math.random() * Math.PI * 2,
+                    amplitude: Math.random() * 3
+                };
+            }
+            
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha *= 0.999;
+                this.rotation += this.rotationSpeed;
+                
+                // 创建随机的左右摆动效果
+                this.x += Math.sin(Date.now() * this.wiggle.speed + this.wiggle.offset) * this.wiggle.amplitude * 0.1;
+                
+                // 如果爱心离开屏幕底部，重置它
+                if (this.y > canvas.height + 50 || this.alpha < 0.1) {
+                    this.reset();
+                }
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.globalAlpha = this.alpha;
+                
+                // 创建渐变粉色效果
+                const gradient = ctx.createRadialGradient(
+                    0, 0, 0, 
+                    0, 0, this.size
+                );
+                
+                gradient.addColorStop(0, '#ff9ec6');
+                gradient.addColorStop(0.7, '#ff66a3');
+                gradient.addColorStop(1, '#ff1493');
+                
+                ctx.fillStyle = gradient;
+                
+                // 绘制爱心形状
+                ctx.beginPath();
+                const curveScale = 0.6;
+                ctx.moveTo(0, 0 - this.size/2);
+                for (let t = 0; t < Math.PI * 2; t += 0.01) {
+                    // 心脏参数方程
+                    const x = 16 * Math.pow(Math.sin(t), 3);
+                    const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                    ctx.lineTo(x * curveScale * (this.size/20), y * curveScale * (this.size/20));
+                }
+                ctx.fill();
+                
+                // 添加高光效果
+                ctx.beginPath();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.arc(-5 * (this.size/20), -5 * (this.size/20), 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+        
+        // 创建多个爱心
+        const hearts = [];
+        const heartCount = 150; // 爱心数量
+        
+        function init() {
+            for (let i = 0; i < heartCount; i++) {
+                setTimeout(() => {
+                    hearts.push(new Heart());
+                }, i * 100); // 延迟创建以产生错落感
+            }
+        }
+        
+        // 动画循环
+        let animationRunning = true;
+        
+        function animate() {
+            if (animationRunning) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 添加淡出效果
+                ctx.fillStyle = 'rgba(249, 197, 209, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 更新并绘制所有爱心
+                hearts.forEach(heart => {
+                    heart.update();
+                    heart.draw();
+                });
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // 添加更多爱心
+        document.getElementById('moreBtn').addEventListener('click', () => {
+            for (let i = 0; i < 30; i++) {
+                hearts.push(new Heart());
+            }
+        });
+        
+        // 暂停/恢复动画
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            animationRunning = !animationRunning;
+        });
+        
+        // 自动播放音乐（静音处理，需要用户交互）
+        const bgMusic = document.getElementById('bgMusic');
+        bgMusic.volume = 0.3;
+        
+        document.body.addEventListener('click', function() {
+            if (bgMusic.paused) {
+                bgMusic.play().catch(e => console.log("自动播放音乐需要用户交互"));
+            }
+        }, { once: true });
+        
+        // 初始化并开始动画
+        init();
+        animate();
+    </script>
+</body>
+</html>
